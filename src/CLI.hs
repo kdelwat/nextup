@@ -12,11 +12,17 @@ formatReader =
   where
     reader input = left (\_ -> "Invalid media type") $ readEither input
 
+formatArg :: Parser Format
+formatArg = argument formatReader (metavar "MEDIA_FORMAT")
+
+addP :: Parser Command
 addP = Add <$> formatArg <*> nameArg <*> artistArg
   where
-    formatArg = argument formatReader (metavar "MEDIA_FORMAT")
     nameArg = strArgument (metavar "NAME")
     artistArg = strArgument (metavar "ARTIST")
+
+nextP :: Parser Command
+nextP = Next <$> formatArg
 
 commandParser :: ParserInfo Command
 commandParser =
@@ -26,7 +32,11 @@ commandParser =
               "stats"
               ( info (helper <*> pure Stats) (fullDesc <> progDesc "")
               )
-              <> command "add" (info (helper <*> addP) (fullDesc <> progDesc ""))
+              <> command
+                "add"
+                ( info (helper <*> addP) (fullDesc <> progDesc "")
+                )
+              <> command "next" (info (helper <*> nextP) (fullDesc <> progDesc "Get the next unrated item"))
           )
    in info
         (cmds <**> helper)

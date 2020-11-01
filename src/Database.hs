@@ -20,11 +20,11 @@ newtype Rating = Rating (Maybe Int)
 instance Show Rating where
   show (Rating r) =
     case r of
-      Just rating -> show rating
+      Just n -> show n
       Nothing -> "?"
 
 data Format = Book | Album | Film
-  deriving (Show, Read)
+  deriving (Show, Read, Eq)
 
 data MediaItem = MediaItem
   { format :: !Format,
@@ -52,6 +52,7 @@ instance FromField Format where
     pure Album
   parseField "film" =
     pure Film
+  parseField f = fail ("Not a media format: " ++ show f)
 
 instance ToField Format where
   toField Book = "book"
@@ -74,17 +75,17 @@ data Database = Database
   }
 
 parse :: String -> BL.ByteString -> Either String Database
-parse filename s =
+parse fname s =
   case decode NoHeader s :: Either String (V.Vector MediaItem) of
     Left err -> Left err
-    Right v -> Right (Database {records = v, filename = filename})
+    Right v -> Right (Database {records = v, filename = fname})
 
 load :: String -> IO (Either String Database)
-load filename = do
+load fname = do
   csvData <-
     BL.readFile
-      filename
-  return (parse filename csvData)
+      fname
+  return (parse fname csvData)
 
 save :: Database -> IO ()
 save db = do
