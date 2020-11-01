@@ -30,6 +30,9 @@ addP = Add <$> formatArg <*> nameArg <*> artistArg
 nextP :: Parser Command
 nextP = Next <$> formatArg
 
+listP :: Parser Command
+listP = List <$> formatArg
+
 rateP :: Parser Command
 rateP = Rate <$> idArg <*> ratingArg
   where
@@ -48,6 +51,7 @@ commandParser =
                 "add"
                 (info (helper <*> addP) (fullDesc <> progDesc ""))
               <> command "next" (info (helper <*> nextP) (fullDesc <> progDesc "Get the next unrated item"))
+              <> command "list" (info (helper <*> listP) (fullDesc <> progDesc "List all items of a particular format"))
               <> command "rate" (info (helper <*> rateP) (fullDesc <> progDesc "Rate an item"))
           )
    in info

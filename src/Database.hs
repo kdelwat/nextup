@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Database (load, save, nextId, Database (..), MediaItem (..), Format (..), Rating (..)) where
+module Database (load, save, nextId, recordsOfFormat, Database (..), MediaItem (..), Format (..), Rating (..)) where
 
 import Control.Monad (mzero)
 import qualified Data.ByteString as B
@@ -96,3 +96,7 @@ save db = do
 nextId :: Database -> Int
 nextId =
   ((+) 1) . maximum . V.toList . V.map itemId . records
+
+recordsOfFormat :: Format -> Database -> V.Vector MediaItem
+recordsOfFormat mediaFormat =
+  V.filter (\i -> (format i) == mediaFormat) . records
