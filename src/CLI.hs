@@ -15,6 +15,12 @@ formatReader =
 formatArg :: Parser Format
 formatArg = argument formatReader (metavar "MEDIA_FORMAT")
 
+intReader :: ReadM Int
+intReader =
+  eitherReader reader
+  where
+    reader input = left (\_ -> "Not an integer") $ readEither input
+
 addP :: Parser Command
 addP = Add <$> formatArg <*> nameArg <*> artistArg
   where
@@ -23,6 +29,12 @@ addP = Add <$> formatArg <*> nameArg <*> artistArg
 
 nextP :: Parser Command
 nextP = Next <$> formatArg
+
+rateP :: Parser Command
+rateP = Rate <$> idArg <*> ratingArg
+  where
+    idArg = argument intReader (metavar "ID")
+    ratingArg = argument intReader (metavar "RATING")
 
 commandParser :: ParserInfo Command
 commandParser =
@@ -34,9 +46,9 @@ commandParser =
               )
               <> command
                 "add"
-                ( info (helper <*> addP) (fullDesc <> progDesc "")
-                )
+                (info (helper <*> addP) (fullDesc <> progDesc ""))
               <> command "next" (info (helper <*> nextP) (fullDesc <> progDesc "Get the next unrated item"))
+              <> command "rate" (info (helper <*> rateP) (fullDesc <> progDesc "Rate an item"))
           )
    in info
         (cmds <**> helper)

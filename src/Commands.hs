@@ -1,11 +1,12 @@
 module Commands (Command (..), run) where
 
 import qualified Data.Vector as V
-import Database (Database, Format, MediaItem (MediaItem, format), Rating (Rating), nextId, records)
+import Database (Database, Format, MediaItem (MediaItem, format, itemId, rating), Rating (Rating), nextId, records)
 
 data Command
   = Add Format String String
   | Next Format
+  | Rate Int Int
   | Stats
 
 safeHead :: V.Vector a -> Maybe a
@@ -29,9 +30,15 @@ runNext old mediaFormat =
         Just h -> (old, show h)
         Nothing -> (old, "No unrated items")
 
+runRate :: Database -> Int -> Int -> (Database, String)
+runRate old target newRating =
+  let new = old {records = V.map (\i -> if itemId i == target then i {rating = Rating (Just newRating)} else i) (records old)}
+   in (new, "Added rating")
+
 run :: Command -> Database -> (Database, String)
 run cmd old = case cmd of
   Stats ->
     runStats old
   Add mediaFormat name artist -> runAdd old mediaFormat name artist
   Next mediaFormat -> runNext old mediaFormat
+  Rate target newRating -> runRate old target newRating
