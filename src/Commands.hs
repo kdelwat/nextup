@@ -13,8 +13,9 @@ runStats old =
    in (old, "Total items: " ++ show nItems)
 
 runAdd :: Database -> Format -> String -> String -> (Database, String)
-runAdd old mType name artist =
-  (old, "Added: " ++ show mType ++ " " ++ name ++ "  " ++ artist)
+runAdd old format name artist =
+  let newItem = MediaItem {format = format, name = name, artist = artist, rating = Rating (Nothing)}
+   in (old {records = V.snoc (records old) newItem}, "[Added]\n" ++ show newItem)
 
 run :: Command -> Database -> (Database, String)
 run cmd old =

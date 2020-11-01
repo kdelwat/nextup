@@ -10,4 +10,6 @@ main = do
   dbRes <- DB.load "db.csv"
   case dbRes of
     Left err -> putStrLn err
-    Right d -> putStrLn (snd (run options d))
+    Right old ->
+      let (new, output) = run options old
+       in sequence_ [putStrLn output, DB.save new]

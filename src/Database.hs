@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Database (load, Database (..), MediaItem (..), Format (..)) where
+module Database (load, save, Database (..), MediaItem (..), Format (..), Rating (..)) where
 
 import Control.Monad (mzero)
 import qualified Data.ByteString as B
@@ -9,13 +9,19 @@ import Data.Csv
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import qualified Data.Vector as V
+import Text.Printf (printf)
 
 -- https://stackoverflow.com/a/22793986
 packStr :: String -> B.ByteString
 packStr = encodeUtf8 . T.pack
 
 newtype Rating = Rating (Maybe Int)
-  deriving (Show)
+
+instance Show Rating where
+  show (Rating r) =
+    case r of
+      Just rating -> show rating
+      Nothing -> "?"
 
 data Format = Book | Album | Film
   deriving (Show, Read)
@@ -26,7 +32,9 @@ data MediaItem = MediaItem
     artist :: !String,
     rating :: !Rating
   }
-  deriving (Show)
+
+instance Show MediaItem where
+  show m = printf "[%s] %s - %s (%s)" (show (format m)) (name m) (artist m) (show (rating m))
 
 instance FromField Rating where
   parseField s = case runParser (parseField s) of
@@ -61,18 +69,24 @@ instance ToRecord MediaItem where
       [toField format', toField name', toField artist', toField ranking']
 
 data Database = Database
-  { records :: V.Vector MediaItem
+  { records :: V.Vector MediaItem,
+    filename :: String
   }
 
-parse :: BL.ByteString -> Either String Database
-parse s =
+parse :: String -> BL.ByteString -> Either String Database
+parse filename s =
   case decode NoHeader s :: Either String (V.Vector MediaItem) of
     Left err -> Left err
-    Right v -> Right (Database {records = v})
+    Right v -> Right (Database {records = v, filename = filename})
 
 load :: String -> IO (Either String Database)
 load filename = do
   csvData <-
     BL.readFile
       filename
-  return (parse csvData)
+  return (parse filename csvData)
+
+save :: Database -> IO ()
+save db = do
+  let output = encode ((V.toList . records) db)
+  BL.writeFile (filename db) output
