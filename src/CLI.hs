@@ -1,11 +1,20 @@
 module CLI (parseCLI) where
 
 import Commands
+import Control.Arrow (left)
+import Database
 import Options.Applicative
+import Text.Read (readEither)
 
-addP = Add <$> mTypeArg <*> nameArg <*> artistArg
+formatReader :: ReadM Format
+formatReader =
+  eitherReader reader
   where
-    mTypeArg = strArgument (metavar "MEDIA_TYPE")
+    reader input = left (\_ -> "Invalid media type") $ readEither input
+
+addP = Add <$> formatArg <*> nameArg <*> artistArg
+  where
+    formatArg = argument formatReader (metavar "MEDIA_FORMAT")
     nameArg = strArgument (metavar "NAME")
     artistArg = strArgument (metavar "ARTIST")
 

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Database (load, Database (..), MediaItem (..)) where
+module Database (load, Database (..), MediaItem (..), Format (..)) where
 
 import Control.Monad (mzero)
 import qualified Data.ByteString as B
@@ -17,6 +17,17 @@ packStr = encodeUtf8 . T.pack
 newtype Rating = Rating (Maybe Int)
   deriving (Show)
 
+data Format = Book | Album | Film
+  deriving (Show, Read)
+
+data MediaItem = MediaItem
+  { format :: !Format,
+    name :: !String,
+    artist :: !String,
+    rating :: !Rating
+  }
+  deriving (Show)
+
 instance FromField Rating where
   parseField s = case runParser (parseField s) of
     Left _ -> pure $ Rating (Nothing)
@@ -26,22 +37,28 @@ instance ToField Rating where
   toField (Rating (Just n)) = packStr (show n)
   toField (Rating (Nothing)) = ""
 
-data MediaItem = MediaItem
-  { name :: !String,
-    artist :: !String,
-    rating :: !Rating
-  }
-  deriving (Show)
+instance FromField Format where
+  parseField "book" =
+    pure Book
+  parseField "album" =
+    pure Album
+  parseField "film" =
+    pure Film
+
+instance ToField Format where
+  toField Book = "book"
+  toField Album = "album"
+  toField Film = "film"
 
 instance FromRecord MediaItem where
   parseRecord v
-    | length v == 3 = MediaItem <$> v .! 0 <*> v .! 1 <*> v .! 2
+    | length v == 4 = MediaItem <$> v .! 0 <*> v .! 1 <*> v .! 2 <*> v .! 3
     | otherwise = mzero
 
 instance ToRecord MediaItem where
-  toRecord (MediaItem name' artist' ranking') =
+  toRecord (MediaItem format' name' artist' ranking') =
     record
-      [toField name', toField artist', toField ranking']
+      [toField format', toField name', toField artist', toField ranking']
 
 data Database = Database
   { records :: V.Vector MediaItem
