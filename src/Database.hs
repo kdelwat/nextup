@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Database (load, save, Database (..), MediaItem (..), Format (..), Rating (..)) where
+module Database (load, save, nextId, Database (..), MediaItem (..), Format (..), Rating (..)) where
 
 import Control.Monad (mzero)
 import qualified Data.ByteString as B
@@ -27,14 +27,15 @@ data Format = Book | Album | Film
   deriving (Show, Read, Eq)
 
 data MediaItem = MediaItem
-  { format :: !Format,
+  { itemId :: !Int,
+    format :: !Format,
     name :: !String,
     artist :: !String,
     rating :: !Rating
   }
 
 instance Show MediaItem where
-  show m = printf "[%s] %s - %s (%s)" (show (format m)) (name m) (artist m) (show (rating m))
+  show m = printf "(%i) %s - %s (%s) [%s]" (itemId m) (name m) (artist m) (show (rating m)) (show (format m))
 
 instance FromField Rating where
   parseField s = case runParser (parseField s) of
@@ -61,13 +62,13 @@ instance ToField Format where
 
 instance FromRecord MediaItem where
   parseRecord v
-    | length v == 4 = MediaItem <$> v .! 0 <*> v .! 1 <*> v .! 2 <*> v .! 3
+    | length v == 5 = MediaItem <$> v .! 0 <*> v .! 1 <*> v .! 2 <*> v .! 3 <*> v .! 4
     | otherwise = mzero
 
 instance ToRecord MediaItem where
-  toRecord (MediaItem format' name' artist' ranking') =
+  toRecord (MediaItem id' format' name' artist' ranking') =
     record
-      [toField format', toField name', toField artist', toField ranking']
+      [toField id', toField format', toField name', toField artist', toField ranking']
 
 data Database = Database
   { records :: V.Vector MediaItem,
@@ -91,3 +92,7 @@ save :: Database -> IO ()
 save db = do
   let output = encode ((V.toList . records) db)
   BL.writeFile (filename db) output
+
+nextId :: Database -> Int
+nextId =
+  ((+) 1) . maximum . V.toList . V.map itemId . records

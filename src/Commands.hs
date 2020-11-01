@@ -1,7 +1,7 @@
 module Commands (Command (..), run) where
 
 import qualified Data.Vector as V
-import Database (Database, Format, MediaItem (MediaItem, format), Rating (Rating), records)
+import Database (Database, Format, MediaItem (MediaItem, format), Rating (Rating), nextId, records)
 
 data Command
   = Add Format String String
@@ -19,7 +19,7 @@ runStats old =
 
 runAdd :: Database -> Format -> String -> String -> (Database, String)
 runAdd old mediaFormat name artist =
-  let newItem = MediaItem mediaFormat name artist (Rating (Nothing))
+  let newItem = MediaItem (nextId old) mediaFormat name artist (Rating (Nothing))
    in (old {records = V.snoc (records old) newItem}, "[Added]\n" ++ show newItem)
 
 runNext :: Database -> Format -> (Database, String)
