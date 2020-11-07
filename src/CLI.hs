@@ -45,11 +45,11 @@ commandParser =
         subparser
           ( command
               "stats"
-              ( info (helper <*> pure Stats) (fullDesc <> progDesc "")
+              ( info (helper <*> pure Stats) (fullDesc <> progDesc "Get statistics about your media library")
               )
               <> command
                 "add"
-                (info (helper <*> addP) (fullDesc <> progDesc ""))
+                (info (helper <*> addP) (fullDesc <> progDesc "Add a new media item"))
               <> command "next" (info (helper <*> nextP) (fullDesc <> progDesc "Get the next unrated item"))
               <> command "list" (info (helper <*> listP) (fullDesc <> progDesc "List all items of a particular format"))
               <> command "rate" (info (helper <*> rateP) (fullDesc <> progDesc "Rate an item"))
