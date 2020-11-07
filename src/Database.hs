@@ -2,13 +2,16 @@
 
 module Database (load, save, nextId, recordsOfFormat, Database (..), MediaItem (..), Format (..), Rating (..)) where
 
-import Control.Monad (mzero)
+import Control.Monad (mzero, when)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import Data.Csv
+import Data.List.NonEmpty (nonEmpty)
+import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import qualified Data.Vector as V
+import System.Directory (doesFileExist)
 import Text.Printf (printf)
 
 -- https://stackoverflow.com/a/22793986
@@ -83,6 +86,8 @@ parse fname s =
 
 load :: String -> IO (Either String Database)
 load fname = do
+  fileExists <- doesFileExist fname
+  when (not fileExists) (writeFile fname "")
   csvData <-
     BL.readFile
       fname
@@ -93,9 +98,12 @@ save db = do
   let output = encode ((V.toList . records) db)
   BL.writeFile (filename db) output
 
+safeMaximum :: (Ord a) => [a] -> Maybe a
+safeMaximum = fmap maximum . nonEmpty
+
 nextId :: Database -> Int
 nextId =
-  ((+) 1) . maximum . V.toList . V.map itemId . records
+  ((+) 1) . (fromMaybe 0) . safeMaximum . V.toList . V.map itemId . records
 
 recordsOfFormat :: Format -> Database -> V.Vector MediaItem
 recordsOfFormat mediaFormat =
