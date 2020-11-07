@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Database (load, save, nextId, recordsOfFormat, Database (..), MediaItem (..), Format (..), Rating (..)) where
+module Database (load, save, nextId, recordsOfFormat, Database (..), MediaItem (..), Format (..), Rating (..), isRated) where
 
 import Control.Monad (mzero, when)
 import qualified Data.ByteString as B
@@ -108,3 +108,9 @@ nextId =
 recordsOfFormat :: Format -> Database -> V.Vector MediaItem
 recordsOfFormat mediaFormat =
   V.filter (\i -> (format i) == mediaFormat) . records
+
+isRated :: MediaItem -> Bool
+isRated m =
+  case (rating m) of
+    Rating (Just _) -> True
+    Rating (Nothing) -> False

@@ -1,7 +1,16 @@
 module Commands (Command (..), run) where
 
 import qualified Data.Vector as V
-import Database (Database, Format, MediaItem (MediaItem, itemId, rating), Rating (Rating), nextId, records, recordsOfFormat)
+import Database
+  ( Database,
+    Format,
+    MediaItem (MediaItem, itemId, rating),
+    Rating (Rating),
+    isRated,
+    nextId,
+    records,
+    recordsOfFormat,
+  )
 
 data Command
   = Add Format String String
@@ -26,7 +35,7 @@ runAdd old mediaFormat name artist =
 
 runNext :: Database -> Format -> (Database, String)
 runNext old mediaFormat =
-  let next = safeHead . recordsOfFormat mediaFormat
+  let next = safeHead . V.filter (not . isRated) . recordsOfFormat mediaFormat
    in case next old of
         Just h -> (old, show h)
         Nothing -> (old, "No unrated items")
