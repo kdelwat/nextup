@@ -56,3 +56,15 @@ git clone https://github.com/kdelwat/nextup.git
 cd nextup
 cabal install
 ```
+
+## Configuration
+
+You can set the database / CSV file location using Nextup's config file, which will be created by default at
+`$XDG_CONFIG_DIR/nextup/nextup.ini`:
+
+```
+[DATABASE]
+path: /home/myusername/nextup.csv
+```
+
+By default, the database will be at `nextup_db.csv` in the directory in which you run the program.
